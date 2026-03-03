@@ -267,7 +267,7 @@ void Opcion_1() {
 		puts("");
 		puts("1.");
 		puts("x^2 + xy + 2y^2 - 5 = 0");
-		puts("	 5y - 2xy^2 + 3 = 0");
+		puts("     5y - 2xy^2 + 3 = 0");
 		puts("");
 		puts("2.");
 		puts("x^2 - 3y^2 - 10 = 0");
@@ -276,11 +276,11 @@ void Opcion_1() {
 		puts("3.");
 		puts("   3x^2 + y^2 - 8y + 2z^2 - 5 = 0");
 		puts("-2x^2 - 12x + y^2 - 3z^2 + 10 = 0");
-		puts("				 -x + 2y + 5z = 0");
+		puts("                 -x + 2y + 5z = 0");
 		puts("");
 		puts("4.");
 		puts(" x^2 + y^2 - 2z + 3 = 0");
-		puts("	  x + y + z - 5 = 0");
+		puts("      x + y + z - 5 = 0");
 		puts("x^2 - y^2 + z^2 - 9 = 0");
 		puts("");
 		puts("Seleccionar:");

@@ -363,7 +363,7 @@ Matriz Multiplicar_matrices (Matriz matriz_1, Matriz matriz_2) {
 	for (i=0; i < resultado.filas; i++)
 		for (j=0; j < resultado.columnas; j++) {
 			resultado.entrada[i * resultado.columnas + j] = 0;
-			for (k=0; k < resultado.filas; k++)
+			for (k=0; k < matriz_1.columnas; k++)
 				resultado.entrada[i * resultado.columnas + j] += matriz_1.entrada[i * matriz_1.columnas + k] * matriz_2.entrada[k * matriz_2.columnas + j];
 		}
 
