@@ -217,69 +217,137 @@ void Normalizar (Matriz vector, double norma) {
 		vector.entrada[i] /= norma;
 }
 
+#define EPS 1e-12
 
+// Macro para acceder a elementos
+#define MAT(m, i, j) m.entrada[(i) * m.columnas + (j)]
 
-void Invertir_matriz (Matriz matriz) {
-	/* Utiliza el método de intercambio para invertir la matriz. */
+void Invertir_matriz(Matriz matriz) {
+    if (matriz.filas != matriz.columnas) {
+        printf("Error: la matriz no es cuadrada.\n");
+        return;
+    }
 
-	int i, j, h, k, m, encontrado;
-	double *filas_marcadas = (double *) malloc (sizeof(double) * matriz.filas);
-	double *columnas_marcadas = (double *) malloc (sizeof(double) * matriz.columnas);
-	double temp; // Para divisiones entre el pivote
+    int n = matriz.filas;
+    int i, j, k;
 
-	// Inicializando en cero los arreglos de filas y columnas marcadas
-	for (m = 0; m < matriz.filas; m++) {
-		filas_marcadas[m] = 0.0;
-		columnas_marcadas[m] = 0.0;
-	}
+    // Copia de A (porque la vamos a modificar)
+    double *LU = (double *)malloc(sizeof(double) * n * n);
+    int *piv = (int *)malloc(sizeof(int) * n);
 
-	// Iterando
-	for (m = 0; m < matriz.filas; m++) {
-		// Buscando el pivote
-		// Buscando el primer elemento con el cual comparar
-		encontrado = 0;
-		for (i = 0; i < matriz.filas && encontrado == 0; i++)
-			for (j = 0; j < matriz.columnas && encontrado == 0; j++)
-				if (filas_marcadas[i] == 0 && columnas_marcadas[j] == 0) {
-					encontrado = 1;
-					h = i;
-					k = j;
-				}
-		// Buscando el elmento de mayor magnitud
-		for (i = 0; i < matriz.filas; i++)
-			for (j = 0; j < matriz.columnas; j++)
-				if (filas_marcadas[i] == 0 && columnas_marcadas[j] == 0)
-					if (fabs (matriz.entrada[h * matriz.columnas + k]) < fabs (matriz.entrada[i * matriz.columnas + j])) {
-						// Seleccionado
-						h = i;
-						k = j;
-						//Marcando fila y columna
-						filas_marcadas[i] = 1;
-						columnas_marcadas[j] = 1;
-					}
+    if (!LU || !piv) {
+        printf("Error de memoria.\n");
+        free(LU);
+        free(piv);
+        return;
+    }
 
-		// Dividiendo entre el pivote los demás elementos de su mismo renglón y cambiandoles el signo
-		temp = matriz.entrada[h * matriz.columnas + k];
-		for (i = 0; i < matriz.filas; i++)
-			matriz.entrada[h * matriz.columnas + i] /= temp * -1.0;
+    // Inicializar
+    for (i = 0; i < n; i++) {
+        piv[i] = i;
+        for (j = 0; j < n; j++) {
+            LU[i*n + j] = MAT(matriz, i, j);
+        }
+    }
 
-		// Restando a las demás entradas de la matriz
-		for (i = 0; i < matriz.filas; i++)
-			for (j = 0; j < matriz.columnas; j++)
-				if (i != h && j != k)
-					matriz.entrada[i * matriz.filas + j] += matriz.entrada[h * matriz.columnas + j] * matriz.entrada[i * matriz.columnas + k];
-		
-		// Dividiendo entre el pivote los demás elementos de su misma columna
-		for (i = 0; i < matriz.filas; i++)
-			matriz.entrada[i * matriz.columnas + k] /= temp;
+    // Factorización LU con pivoteo parcial
+    for (k = 0; k < n; k++) {
+        // Buscar pivote
+        int max = k;
+        double max_val = fabs(LU[k*n + k]);
 
-		// Cambiando el pivote por su recíproco
-		matriz.entrada[h * matriz.columnas + k] = 1.0 / temp;
-	}
+        for (i = k + 1; i < n; i++) {
+            double val = fabs(LU[i*n + k]);
+            if (val > max_val) {
+                max_val = val;
+                max = i;
+            }
+        }
 
-	// Liberando memoria de las filas y columnas marcadas
-	free (filas_marcadas);
-	free (columnas_marcadas);
+        if (max_val < EPS) {
+            printf("Error: la matriz no es invertible.\n");
+            free(LU);
+            free(piv);
+            return;
+        }
+
+        // Intercambio de filas
+        if (max != k) {
+            for (j = 0; j < n; j++) {
+                double tmp = LU[k*n + j];
+                LU[k*n + j] = LU[max*n + j];
+                LU[max*n + j] = tmp;
+            }
+
+            int tmp = piv[k];
+            piv[k] = piv[max];
+            piv[max] = tmp;
+        }
+
+        // Eliminación
+        for (i = k + 1; i < n; i++) {
+            LU[i*n + k] /= LU[k*n + k];
+
+            for (j = k + 1; j < n; j++) {
+                LU[i*n + j] -= LU[i*n + k] * LU[k*n + j];
+            }
+        }
+    }
+
+    // Reservar espacio para la inversa
+    double *inv = (double *)malloc(sizeof(double) * n * n);
+
+    if (!inv) {
+        printf("Error de memoria.\n");
+        free(LU);
+        free(piv);
+        return;
+    }
+
+    // Resolver AX = I columna por columna
+    for (j = 0; j < n; j++) {
+        double *y = (double *)malloc(sizeof(double) * n);
+        double *x = (double *)malloc(sizeof(double) * n);
+
+        // Construir e_j con pivoteo aplicado
+        for (i = 0; i < n; i++) {
+            y[i] = (piv[i] == j) ? 1.0 : 0.0;
+        }
+
+        // Sustitución hacia adelante (Ly = Pb)
+        for (i = 0; i < n; i++) {
+            for (k = 0; k < i; k++) {
+                y[i] -= LU[i*n + k] * y[k];
+            }
+        }
+
+        // Sustitución hacia atrás (Ux = y)
+        for (i = n - 1; i >= 0; i--) {
+            for (k = i + 1; k < n; k++) {
+                y[i] -= LU[i*n + k] * x[k];
+            }
+            x[i] = y[i] / LU[i*n + i];
+        }
+
+        // Guardar columna j de la inversa
+        for (i = 0; i < n; i++) {
+            inv[i*n + j] = x[i];
+        }
+
+        free(y);
+        free(x);
+    }
+
+    // Copiar resultado a la matriz original
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < n; j++) {
+            MAT(matriz, i, j) = inv[i*n + j];
+        }
+    }
+
+    free(LU);
+    free(piv);
+    free(inv);
 }
 
 Matriz Multiplicar_matrices (Matriz matriz_1, Matriz matriz_2) {

@@ -34,7 +34,7 @@ Matriz F_3 (Matriz vector) {
 
 	resultado.entrada[0] = 3.0 * pow(vector.entrada[0], 2.0) + pow(vector.entrada[1], 2.0) - 8 * vector.entrada[1] + 2 * pow(vector.entrada[2], 2.0) - 5.0;
 	resultado.entrada[1] = -2.0 * pow(vector.entrada[0], 2.0) - 12 * vector.entrada[0] + pow(vector.entrada[1], 2.0) - 3 * pow(vector.entrada[2], 2.0) + 10.0;
-	resultado.entrada[2] = - vector.entrada[0] + 2 * vector.entrada[1] + 5 * vector.entrada[2];
+	resultado.entrada[2] = 0.0 - vector.entrada[0] + 2 * vector.entrada[1] + 5 * vector.entrada[2];
 
 	return resultado;
 }
@@ -246,6 +246,11 @@ void Iterador(int seleccion, int max_iteraciones, double tolerancia, Matriz vect
 	puts("Resultados de las iteraciones:");
 	printf("Mejor aproximación: "); Imprimir_vector(x_1);
 	printf("Norma de F: %lf\n", norma);
+
+	// Liberando lo último de memoria
+	free(x_1.entrada);
+	free(f_1.entrada);
+	free(a_1.entrada);
 }
 
 void Opcion_1() {
