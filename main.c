@@ -4,6 +4,7 @@
 
 #include "Funciones_basicas.c"
 #include "Matrices.c"
+#include "Opcion_1.c"
 
 int main () {
 	int seleccion;

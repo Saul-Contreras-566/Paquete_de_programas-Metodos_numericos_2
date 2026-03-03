@@ -7,7 +7,7 @@ nuestro programa.
 #include <stdio.h>
 #include <stdlib.h>
 
-Constantes
+// Constantes
 #define PI 3.141592653589793
 #define EULER 2.718281828459045
 

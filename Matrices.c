@@ -282,6 +282,73 @@ void Invertir_matriz (Matriz matriz) {
 	free (columnas_marcadas);
 }
 
+Matriz Multiplicar_matrices (Matriz matriz_1, Matriz matriz_2) {
+	int i, j, k; // Variables para bucles
+	Matriz resultado;
+
+	// Inicializando la matriz resultado
+	resultado.filas = matriz_1.filas;
+	resultado.columnas = matriz_2.columnas;
+	resultado.entrada = (double *) malloc(resultado.filas * resultado.columnas * sizeof(double));
+
+	// Multiplicando las matrices
+	for (i=0; i < resultado.filas; i++)
+		for (j=0; j < resultado.columnas; j++) {
+			resultado.entrada[i * resultado.columnas + j] = 0;
+			for (k=0; k < resultado.filas; k++)
+				resultado.entrada[i * resultado.columnas + j] += matriz_1.entrada[i * matriz_1.columnas + k] * matriz_2.entrada[k * matriz_2.columnas + j];
+		}
+
+	return resultado;
+}
+
+Matriz SR_matrices (Matriz matriz_1, Matriz matriz_2, int sr) {
+	/* Suma o Resta dos matrices */
+
+	int i, j; //Variables para bucles
+	Matriz resultado;
+
+	// Inicializando la matriz resultado
+	resultado.filas = matriz_1.filas;
+	resultado.columnas = matriz_2.columnas;
+	resultado.entrada = (double *) malloc(resultado.filas * resultado.columnas * sizeof(double));
+
+	// Sumando las matrices
+	for (i=0; i < resultado.filas; i++)
+		for (j=0; j < resultado.columnas; j++)
+			if (sr == 1)
+				resultado.entrada[i * resultado.columnas + j] = matriz_1.entrada[i * resultado.columnas + j] + matriz_2.entrada[i * resultado.columnas + j];
+			else
+				resultado.entrada[i * resultado.columnas + j] = matriz_1.entrada[i * resultado.columnas + j] - matriz_2.entrada[i * resultado.columnas + j];
+	
+	return resultado;
+}
+
+void Multiplicar_matriz_con_escalar (Matriz matriz, double escalar) {
+	int i, j; //Variables para bucles
+
+	for (i=0; i < matriz.filas; i++)
+		for (j=0; j < matriz.columnas; j++)
+			matriz.entrada[i * matriz.columnas + j] *= escalar;
+}
+
+void Transponer_matriz (Matriz *matriz) {
+	int i, j; // Variables para bucles
+	double temporal; // Variable para intercambiar valores
+
+	for (i=0; i < (*matriz).filas; i++)
+		for (j=0; j < (*matriz).columnas; j++) {
+			temporal = (*matriz).entrada[i * (*matriz).columnas + j];
+			(*matriz).entrada[i * (*matriz).columnas + j] = (*matriz).entrada[j * (*matriz).filas + i];
+			(*matriz).entrada[j * (*matriz).filas + i] = temporal;
+		}
+
+	i = (*matriz).filas;
+	(*matriz).filas = (*matriz).columnas;
+	(*matriz).columnas = i;
+
+}
+
 
 
 // FUNCIONES PARA FACTORIZACIÓN DE MATRICES --------------------------------------------------------
