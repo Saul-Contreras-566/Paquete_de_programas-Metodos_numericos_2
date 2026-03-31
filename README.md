@@ -1,6 +1,6 @@
 # Paquete de programas
 
-![Portada](Portada.jpg)
+![Portada](Portada.png)
 
 
 
