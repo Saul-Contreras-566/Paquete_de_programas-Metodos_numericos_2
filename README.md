@@ -1,4 +1,4 @@
-# Paquete de programas
+# Paquete de programas - Métodos numéricos II
 
 ![Portada](Portada.png)
 
