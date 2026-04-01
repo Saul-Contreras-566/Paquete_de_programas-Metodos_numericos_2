@@ -11,7 +11,7 @@
           el valor de x_i o el de f(x_i) respectivamente.
 */
 
-void Lector(Matriz *tabla, double *punto, int *grado, int *salir) {
+void Lector(Matriz *tabla, int *salir) {
 	int continuar;         // Usado para detenerse en caso de no cumplir algunas condiciones.
 	double equidistancia;  // Usado para almacenar la distancia entre x_1 y x_0.
 	double temp;           // Varible para realizar intercambios
@@ -46,6 +46,7 @@ void Lector(Matriz *tabla, double *punto, int *grado, int *salir) {
 					VALOR(tabla, i-1, 1) = temp;
 					continuar = 0; // Esto para repetir las ordenaciones en caso de haber un intercambio.
 				}
+
 		} while (continuar == 0);
 
 		// Verificando equidistancia de los datos.
@@ -62,19 +63,9 @@ void Lector(Matriz *tabla, double *punto, int *grado, int *salir) {
 			continuar = Pregunta_cerrada("¿Quiere leer otros datos?");
 			if (continuar == 0)
 				*salir = 1;
-		} else {
-			continuar = 0; // Esto para evitar continuar el bucle cuando la equidistancia se cumple.
-
-			// Leyendo el punto a interpolar
-			puts("¿Cuál es el punto a interpolar?");
-			*punto = Leer_real_entre(VALOR(tabla, 0, 0), VALOR(tabla, (*tabla).filas-1, 0));
-
-			// Leyendo el grado del polinomio
-			puts("¿Cuál es el grado del polinomio a interpolar?");
-			*grado = Leer_entero_entre(1, (*tabla).filas-1);
 		}
 
-	} while ( continuar == 1);
+	} while (continuar == 1);
 }
 
 void Diferenciador(Matriz *tabla, double *punto, int *grado, Matriz *diferencias);
@@ -91,20 +82,28 @@ void Opcion_2() {
 	tabla.columnas = 2;
 
 	do {
-		Lector(&tabla, &punto, &grado, &salir);
+		Lector(&tabla, &salir);
 		if (salir == 1) {
 			free(tabla.entrada);
 			return;
 		}
 
 		do {
-			Diferenciador(tabla, &punto, &grado, &diferencias);
-			Sumador(tabla, &punto, &grado, diferencias);
+			puts("¿Cuál es el punto a interpolar?");
+			punto = Leer_real_entre(tabla.entrada[0], tabla.entrada[(tabla.filas - 1) * tabla.columnas]);
+
+			puts("¿Cuál es el grado del polinomio a interpolar?");
+			grado = Leer_entero_entre(1, tabla.entrada[(tabla.filas - 1) * tabla.columnas]);
+
+			Diferenciador(tabla, punto, grado, &diferencias);
+			Sumador(tabla, punto, grado, diferencias);
 			if (diferencias != NULL) free(diferencias.entrada); // Liberando memoria
+
 		} while(Pregunta_cerrada("¿Quiere interpolar otro punto?") == 1);
 
 		// Liberando memoria
 		if (tabla.entrada != NULL) free(tabla.entrada);
+
 	}
 	while(Pregunta_cerrada("¿Quiere interpolar con otros datos?") == 1);
 }
