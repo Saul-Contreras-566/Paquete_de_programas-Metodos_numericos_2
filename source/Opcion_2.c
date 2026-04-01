@@ -100,12 +100,11 @@ void Opcion_2() {
 		do {
 			Diferenciador(tabla, &punto, &grado, &diferencias);
 			Sumador(tabla, &punto, &grado, diferencias);
-		}
-		while(Pregunta_cerrada("¿Quiere interpolar otro punto?") == 1);
+			if (diferencias != NULL) free(diferencias.entrada); // Liberando memoria
+		} while(Pregunta_cerrada("¿Quiere interpolar otro punto?") == 1);
 
 		// Liberando memoria
 		if (tabla.entrada != NULL) free(tabla.entrada);
-		if (diferencias != NULL) free(diferencias.entrada);
 	}
 	while(Pregunta_cerrada("¿Quiere interpolar con otros datos?") == 1);
 }
