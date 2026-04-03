@@ -110,7 +110,7 @@ void Leer_tabla(Matriz *tabla) {
 
 	} while (continuar == 0);
 }
-
+//-----------------------------------------------------------------------------------------------------------------------------
 void Diferenciador(Matriz tabla, Matriz *diferencias);
 void Sumador(Matriz tabla, double punto, int grado, Matriz diferencias);
 
@@ -146,4 +146,77 @@ void Opcion_2() {
 
 	}
 	while(Pregunta_cerrada("¿Quiere interpolar con otros datos?") == 1);
+}
+
+void Diferenciador(Matriz tabla, Matriz *diferencias) {
+    int i, j;
+    int n = tabla.filas;
+
+
+    diferencias->filas = n;
+    diferencias->columnas = n;
+    diferencias->entrada = (double *)calloc(n * n, sizeof(double));
+
+    // La primera columna de la tabla de diferencias son los valores f(x_i)
+    for (i = 0; i < n; i++) {
+        diferencias->entrada[i * n] = VALOR(&tabla, i, 1);
+    }
+
+    // (progresivas)
+    for (j = 1; j < n; j++) {
+        for (i = 0; i < n - j; i++) {
+            // Delta^j f_i = Delta^{j-1} f_{i+1} - Delta^{j-1} f_i
+            diferencias->entrada[i * n + j] = diferencias->entrada[(i + 1) * n + (j - 1)] - diferencias->entrada[i * n + (j - 1)];
+        }
+    }
+
+    // Imprime tabla de diferencias
+    puts("\n--- Tabla de Diferencias Finitas ---");
+    printf("%-5s | %-12s", "i", "f(x_i)");
+    for(i = 1; i < n; i++) printf(" | D^%-2d f    ", i);
+    printf("\n");
+
+    for (i = 0; i < n; i++) {
+        printf("%-5d | %-12.6lf", i, diferencias->entrada[i * n]);
+        for (j = 1; j < n - i; j++) {
+            printf(" | %-12.6lf", diferencias->entrada[i * n + j]);
+        }
+        printf("\n");
+    }
+}
+
+void Sumador(Matriz tabla, double punto, int grado, Matriz diferencias) {
+    int n = tabla.filas;
+    double h = VALOR(&tabla, 1, 0) - VALOR(&tabla, 0, 0); // Cálculo de la distancia equidistante
+    double resultado = 0.0, u, termino = 1.0;
+    int i;
+
+    // el grado no puede superar los datos disponibles
+    if (grado >= n) grado = n - 1;
+
+    // decidir entre Progresivo o Regresivo (punto medio de la tabla)
+    double punto_medio = (VALOR(&tabla, 0, 0) + VALOR(&tabla, n - 1, 0)) / 2.0;
+
+    if (punto <= punto_medio) {
+        puts("\n[*] Usando Newton Progresivo.");
+        u = (punto - VALOR(&tabla, 0, 0)) / h;
+        resultado = diferencias.entrada[0]; // f(x_0)
+
+        for (i = 1; i <= grado; i++) {
+            termino *= (u - (i - 1)) / i;
+            resultado += termino * diferencias.entrada[0 * diferencias.columnas + i];
+        }
+    } else {
+        puts("\n[*] Usando Newton Regresivo.");
+        u = (punto - VALOR(&tabla, n - 1, 0)) / h;
+        resultado = diferencias.entrada[(n - 1) * diferencias.columnas]; // f(x_n)
+
+        for (i = 1; i <= grado; i++) {
+            termino *= (u + (i - 1)) / i;
+            // Acceso a la diagonal inferior para diferencias hacia atrás
+            resultado += termino * diferencias.entrada[(n - 1 - i) * diferencias.columnas + i];
+        }
+    }
+
+    printf("\n>>> El valor interpolado es: %6.8lf\n", resultado);
 }
