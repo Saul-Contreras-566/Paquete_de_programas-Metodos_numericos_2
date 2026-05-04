@@ -1,5 +1,5 @@
 # Definiciones básicas
-program_name = Paquete_de_programas-Métodos_numéricos-v2026_04_06
+program_name = Paquete_de_programas-Métodos_numéricos-v2026_05_04
 compiler_flags = -Wall -Werror -Wextra
 
 # Definiendo directorios
