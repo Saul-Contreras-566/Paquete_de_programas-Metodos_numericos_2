@@ -11,6 +11,8 @@ typedef struct {
 	double *entrada;
 } Matriz;
 
+#define MATRIZ_ENTRADA(matriz, fila, columna) matriz.entrada[(fila - 1) * matriz.columnas + (columna - 1)]
+
 // Funciones básicas con matrices
 double *Leer_entradas_de_matriz (int filas, int columnas);
 Matriz Leer_matriz ();
