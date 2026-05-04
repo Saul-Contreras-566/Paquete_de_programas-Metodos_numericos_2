@@ -18,13 +18,15 @@ int main () {
 		puts("Seleccione lo que quiere hacer.");
 		puts("0. SALIR.");
 		puts("1. Resolver un sistemas de ecuaciones no lineales con el método de Broyden.");
-		puts("2. Interpolar un punto por medio de diferencias de Newton.");
+		puts("2. Interpolar un punto por medio del polinomio de diferencias de Newton.");
+		puts("3. Hacer spline cúbico natural de un conjunto de puntos guardados en un archivo CSV.");
 		puts("Seleccionar:");
-		seleccion = Leer_entero_entre(0,2);
+		seleccion = Leer_entero_entre(0,3);
 
 		switch (seleccion) {
 			case 1: Opcion_1(); break;
 			case 2: Opcion_2(); break;
+			case 3: Opcion_3(); break;
 		}
 	}
 	while (seleccion != 0);
