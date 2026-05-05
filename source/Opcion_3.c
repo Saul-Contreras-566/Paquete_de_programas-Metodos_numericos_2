@@ -1,5 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL2_gfxPrimitives.h>
+#include <math.h>
 #include "Funciones_basicas.h"
 #include "Matrices.h"
 #include "Opciones.h"
@@ -17,12 +20,15 @@ void Obtener_puntos (FILE *archivo, Matriz *puntos, short int *error) {
 	   coordenada.
 	4: No se tiene la cantidad necesaria de puntos
 	   para hacer el spline.
+	5: Se tiene dos puntos que tienen misma coordenada x.
 	*/
 
+	int i;
+	int caracteres = 1, numeros = 0, continuar;
 	char *cadena, caracter, *fin_cadena, ultimo_separador = 0;
-	int caracteres = 1, numeros = 0;
-	double numero_leido;
+	double numero_leido, temporal;
 
+	(*puntos).entrada = (double *) malloc (sizeof(double));
 	cadena = (char *) malloc (sizeof(char));
 	cadena[0] = 0;
 
@@ -50,8 +56,8 @@ void Obtener_puntos (FILE *archivo, Matriz *puntos, short int *error) {
 				ultimo_separador = caracter;
 				(*puntos).entrada = (double *) realloc ((*puntos).entrada, sizeof(double) * (++numeros));
 				(*puntos).entrada[numeros - 1] = numero_leido;
-				free(cadena);
 				caracteres = 1;
+				free(cadena);
 				cadena = (char *) malloc (sizeof(char));
 				cadena[0] = 0;
 			}
@@ -79,6 +85,152 @@ void Obtener_puntos (FILE *archivo, Matriz *puntos, short int *error) {
 		*error = 4;
 		return;
 	}
+
+	// Ordenando los puntos
+	do {
+		continuar = 1;
+		for (i = 1; i < (*puntos).filas; i++)
+			if (MATRIZ_ENTRADA (*puntos, i-1, 1) > MATRIZ_ENTRADA (*puntos, i, 1)) {
+				// Intercambiando x.
+				temporal = MATRIZ_ENTRADA (*puntos, i-1, 1);
+				MATRIZ_ENTRADA (*puntos, i, 1) = MATRIZ_ENTRADA (*puntos, i-1, 1);
+				MATRIZ_ENTRADA (*puntos, i-1, 1) = temporal;
+				// Intercambiando y.
+				temporal = MATRIZ_ENTRADA (*puntos, i-1, 2);
+				MATRIZ_ENTRADA (*puntos, i, 1) = MATRIZ_ENTRADA (*puntos, i-1, 2);
+				MATRIZ_ENTRADA (*puntos, i-1, 2) = temporal;
+				// Asegurando repetición hasta que todos los datos estén ordenados.
+				continuar = 0;
+			} else if (MATRIZ_ENTRADA (*puntos, i-1, 1) == MATRIZ_ENTRADA (*puntos, i, 1)) {
+				puts ("Error: Se tiene dos o más puntos con la misma coordenada x.");
+				free ((*puntos).entrada);
+				*error = 5;
+				return;
+			}
+	} while (continuar == 0);
+}
+
+int screen_x(double x, double xmin, double xmax, int window_width) {
+	return (int)(((x - xmin) / (xmax - xmin)) * (double) window_width);
+}
+
+int screen_y(double y, double ymin, double ymax, int window_height) {
+	return (int)(((ymax - y) / (ymax - ymin)) * (double) window_height);
+}
+
+double Evaluar (Matriz puntos, Matriz resultados, double x) {
+	int i;
+	double suma = 0.0;
+
+	for (i = 0; i < puntos.filas - 1; i++)
+		if (MATRIZ_ENTRADA (puntos, i, 1) <= x && x <= MATRIZ_ENTRADA (puntos, i+1, 1)) {
+			suma += MATRIZ_ENTRADA (resultados, i, 1) * pow (x - MATRIZ_ENTRADA (puntos, i, 1), 3.0); // a (x - x_i)^3.
+			suma += MATRIZ_ENTRADA (resultados, i, 2) * pow (x - MATRIZ_ENTRADA (puntos, i, 1), 2.0); // b (x - x_i)^2.
+			suma += MATRIZ_ENTRADA (resultados, i, 3) * (x - MATRIZ_ENTRADA (puntos, i, 1)); // c (x - x_i).
+			suma += MATRIZ_ENTRADA (resultados, i, 4); // d.
+			return suma;
+		}
+	
+	return suma;
+}
+
+double Maxima_y (Matriz puntos) {
+	int i;
+	double maximo = puntos.entrada[1];
+	for (i = 1; i < puntos.filas; i++)
+		if (maximo < MATRIZ_ENTRADA (puntos, i, 2))
+			maximo = MATRIZ_ENTRADA (puntos, i, 2);
+	return maximo;
+}
+
+void Dibujar_spline (Matriz puntos, Matriz resultados) {
+	int graficando = 1;
+	SDL_Event event;
+	int window_width = 1000;
+	int window_height = 1000;
+	int screen_x1, screen_x2, screen_y1, screen_y2;
+	double xmin = MATRIZ_ENTRADA (puntos, 1, 1);
+	double xmax = MATRIZ_ENTRADA (puntos, puntos.filas, 1);
+	double ymin = MATRIZ_ENTRADA (puntos, 1, 2);
+	double ymax = Maxima_y (puntos);
+	double step = ( xmax - xmin ) / ((double) window_width);
+	double x, y1, y2;
+	int thickness = (window_width < window_height ? window_height : window_width) / 100;
+
+	SDL_Init(SDL_INIT_VIDEO);
+
+	SDL_Window *window = SDL_CreateWindow(
+		"Grafica del spline cúbico natural",
+		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+		window_width, window_height,
+		SDL_WINDOW_SHOWN
+	);
+
+	SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+	SDL_RenderClear(renderer);
+
+	// Dibujando ejes
+	// Eje X
+	SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
+	thickLineRGBA(
+		renderer,
+		0,
+		screen_y (0.0, ymin, ymax, window_height),
+		window_width,
+		screen_y (0.0, ymin, ymax, window_height),
+		thickness,
+		255,
+		0,
+		0,
+		255);
+	// Eje Y
+	thickLineRGBA(
+		renderer,
+		screen_x (0.0, xmin, xmax, window_width),
+		0,
+		screen_x (0.0, xmin, xmax, window_width),
+		window_height,
+		thickness,
+		255,
+		0,
+		0,
+		255);
+
+	// Dibujando el Spline
+	SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+	for (x = xmin; x < xmax; x += step) {
+		y1 = Evaluar (puntos, resultados, x);
+		y2 = Evaluar (puntos, resultados, x + step);
+
+		screen_x1 = screen_x (x, xmin, xmax, window_width);
+		screen_y1 = screen_y (y1, ymin, ymax, window_height);
+
+		screen_x2 = screen_x (x + step, xmin, xmax, window_width);
+		screen_y2 = screen_y (y2, ymin, ymax, window_height);
+
+		thickLineRGBA(renderer, screen_x1, screen_y1, screen_x2, screen_y2, thickness, 255, 0, 0, 255);
+	}
+
+	SDL_RenderPresent(renderer);
+
+	// Graficando hasta que la tecla espacio sea presionada.
+	puts ("Presione la tecla ESPACIO dentro de la ventana con la gráfica para cerrarla.");
+	while (graficando == 1) {
+		while (SDL_PollEvent (&event)) {
+			if (event.type == SDL_QUIT)
+				graficando = 0;
+
+			if (event.type == SDL_KEYDOWN)
+				if (event.key.keysym.sym == SDLK_SPACE)
+					graficando = 0;
+		}
+	}
+
+	// Dejando de graficar.
+	SDL_DestroyRenderer(renderer);
+	SDL_DestroyWindow(window);
+	SDL_Quit();
 }
 
 void Opcion_3 () {
@@ -181,15 +333,6 @@ void Opcion_3 () {
 
 		// Imprimiendo sistema que se resolvió.
 		puts ("Sistema que se resolvió:");
-		/*
-		printf ("%.3lf S_0 + 2 (%.3lf + %.3lf) S_1 + %.3lf S_2 = 6 ( %.3lf - %.3lf)\n",
-			MATRIZ_ENTRADA (diferencias, 1, 1),
-			MATRIZ_ENTRADA (diferencias, 1, 1),
-			MATRIZ_ENTRADA (diferencias, 2, 1),
-			MATRIZ_ENTRADA (diferencias, 2, 1),
-			MATRIZ_ENTRADA (diferencias, 2, 2),
-			MATRIZ_ENTRADA (diferencias, 1, 2));
-			*/
 		for (i = 1; i <= coeficientes.filas; i++)
 			printf ("%.3lf S_%d + 2 (%.3lf + %.3lf) S_%d + %.3lf S_%d = 6 ( %.3lf - %.3lf)\n",
 				MATRIZ_ENTRADA (diferencias, i, 1),
@@ -217,6 +360,10 @@ void Opcion_3 () {
 		printf("| %3d | %6.3lf | - | - | - | - |\n",
 			i+1,
 			MATRIZ_ENTRADA (solucion, i+1, 1));
+		puts ("");
+
+		// Dibujando el polinomio
+		Dibujar_spline (puntos, resultados);
 
 		// Preguntando por intentar con otro sistema.
 		respuesta = Pregunta_cerrada ("¿Quiére probar con otro conjunto de puntos?");
