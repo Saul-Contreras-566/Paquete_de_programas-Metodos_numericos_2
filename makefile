@@ -1,6 +1,7 @@
 # Definiciones básicas
 program_name = Paquete_de_programas-Métodos_numéricos-v2026_05_04
 compiler_flags = -Wall -Werror -Wextra
+linkers = -lSDL2main -lSDL2_gfx -lSDL2 -lm
 
 # Definiendo directorios
 source_path = source
@@ -20,7 +21,7 @@ sources = $(source_path)/Funciones_basicas.c \
 
 
 all:
-	gcc $(compiler_flags) -I$(headers_path) $(sources) -o $(program_name)-Linux -lm
+	gcc $(compiler_flags) -I$(headers_path) $(sources) -o $(program_name)-Linux $(linkers)
 
 windows:
-	x86_64-w64-mingw32-gcc $(compiler_flags) -I$(headers_path) $(sources) -o $(program_name)-Windows.exe -lm
+	x86_64-w64-mingw32-gcc $(compiler_flags) -I$(headers_path) $(sources) -o $(program_name)-Windows.exe -lmingw32 $(linkers)
