@@ -26,8 +26,8 @@ El programa puede
 
 ## Compilación del programa
 
-Si cuenta con la herramienta de GNU Make y GCC, puede ejecutar `make`. Si solo cuenta con el segundo, puedo usar el siguiente comando:
+Para compilar el programa, necesita de las bibliotecas `SDL2` y `SDL2_gfx` junto con el compilador `gcc`. Si cuenta con GNU Make, puede usar el comando `make` en la carpeta raíz para compilar, de no contar con este, puede usar el siguiente comando:
 
 ```
-gcc -Wall -Werror -Wextra -Iheaders source/Funciones_basicas.c source/Matrices.c source/Opcion_1.c source/Opcion_2.c source/Opcion_3.c source/main.c -o Paquete_de_programas-Métodos_numéricos.exe -lm
+gcc -Wall -Werror -Wextra -Iheaders source/Funciones_basicas.c source/Matrices.c source/Opcion_1.c source/Opcion_2.c source/Opcion_3.c source/main.c -o Paquete_de_programas-Métodos_numéricos.exe -lSDL2main -lSDL2_gfx -lSDL2 -lm
 ```
