@@ -21,6 +21,7 @@ El programa puede
 1. Resolver algunos sistemas de ecuaciones usando el método de Broyden.
 2. Interpolar un punto por medio del polinomio de diferencias divididas de Newton.
 3. Hacer spline cúbico natural de un conjunto puntos.
+4. Calcular la integral de dos funciones usando la regla de trapecios y la extrapolación de Romberg.
 
 
 
